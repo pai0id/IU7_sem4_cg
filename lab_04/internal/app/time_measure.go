@@ -3,6 +3,7 @@ package app
 import (
 	"image/color"
 	"log"
+	"os"
 	"time"
 
 	"gonum.org/v1/plot"
@@ -18,6 +19,9 @@ type Plot struct {
 }
 
 func drawPlots(plots []Plot, xName string) string {
+	dir := "data"
+	os.Mkdir(dir, os.ModePerm)
+
 	p := plot.New()
 	p.X.Label.Text = xName
 	p.Y.Label.Text = "Время (нс)"
