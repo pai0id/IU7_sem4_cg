@@ -13,10 +13,12 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+
+	"lab_04/internal/calc"
 )
 
 type Pixel struct {
-	point  Point
+	point  calc.Point
 	pColor color.Color
 }
 
@@ -88,7 +90,7 @@ func removePixel(pixels []Pixel, i int) []Pixel {
 	return pixels[:len(pixels)-1]
 }
 
-func getPixels(points []Point) []Pixel {
+func getPixels(points []calc.Point) []Pixel {
 	for _, point := range points {
 		for i, pixel := range pixels {
 			if pixel.point.X == point.X && pixel.point.Y == point.Y {
@@ -101,33 +103,33 @@ func getPixels(points []Point) []Pixel {
 	return pixels
 }
 
-func parseCircMethod(method string) func(xC float64, yC float64, r float64) []Point {
+func parseCircMethod(method string) func(xC float64, yC float64, r float64) []calc.Point {
 	switch method {
 	case METHODS[0]:
-		return CircleCanon
+		return calc.CircleCanon
 	case METHODS[1]:
-		return CircleParam
+		return calc.CircleParam
 	case METHODS[2]:
-		return CircleBres
+		return calc.CircleBres
 	case METHODS[3]:
-		return CircleMidPoint
+		return calc.CircleMidPoint
 	default:
-		return CircleCanon
+		return calc.CircleCanon
 	}
 }
 
-func parseEllipseMethod(method string) func(xC float64, yC float64, w float64, h float64) []Point {
+func parseEllipseMethod(method string) func(xC float64, yC float64, w float64, h float64) []calc.Point {
 	switch method {
 	case METHODS[0]:
-		return EllipseCanon
+		return calc.EllipseCanon
 	case METHODS[1]:
-		return EllipseParam
+		return calc.EllipseParam
 	case METHODS[2]:
-		return EllipseBres
+		return calc.EllipseBres
 	case METHODS[3]:
-		return EllipseMidPoint
+		return calc.EllipseMidPoint
 	default:
-		return EllipseCanon
+		return calc.EllipseCanon
 	}
 }
 
@@ -143,7 +145,7 @@ func createHoriSepRect(width float32) *canvas.Rectangle {
 	return sepRect
 }
 
-func setupApp() {
+func SetupApp() {
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Geometry")
 	// myApp.Settings().SetTheme(theme.LightTheme())
@@ -346,7 +348,7 @@ func setupApp() {
 			return
 		}
 		f := parseCircMethod(methodSelect.Selected)
-		var points []Point
+		var points []calc.Point
 		if step > 0 {
 			for r := minRad; r <= maxRad; r += step {
 				points = f(xCenter, yCenter, r)

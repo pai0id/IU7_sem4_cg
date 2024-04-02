@@ -1,5 +1,7 @@
 package main
 
+import "lab_04/internal/app"
+
 func main() {
-	setupApp()
+	app.SetupApp()
 }

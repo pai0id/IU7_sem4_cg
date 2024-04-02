@@ -46,12 +46,12 @@ func drawPlots(plots []Plot, xName string) string {
 		p.Add(lp)
 	}
 
-	if err := p.Save(4*vg.Inch, 4*vg.Inch, "plots.png"); err != nil {
+	if err := p.Save(4*vg.Inch, 4*vg.Inch, "data/plots.png"); err != nil {
 		log.Fatalf("Could not save plot: %v", err)
 		return ""
 	}
 
-	return "plots.png"
+	return "data/plots.png"
 }
 
 func MeasureCircle(minRad, maxRad, step float64) string {
