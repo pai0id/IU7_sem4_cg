@@ -12,7 +12,7 @@ class GeometryApp:
         return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
 
     def parabola_equation(self, x):
-        return self.c - (x - self.d)**2
+        return self.c - (0.*x - self.d)**2
 
     def upper_circle_equation(self, x):
         delt = self.r**2 - (x - self.a)**2
