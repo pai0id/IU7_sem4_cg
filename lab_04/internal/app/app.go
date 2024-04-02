@@ -4,6 +4,7 @@ import (
 	"errors"
 	"image/color"
 	"log"
+	"math"
 	"strconv"
 
 	"fyne.io/fyne/v2"
@@ -226,8 +227,13 @@ func SetupApp() {
 		}
 		radius, err := strconv.ParseFloat(radEntry.Text, 64)
 		if err != nil {
-			dialog.ShowError(errors.New("НЕКОРРЕКТНЫЙ радиус"), myWindow)
+			dialog.ShowError(errors.New("НЕКОРРЕКТНЫЙ РАДИУС"), myWindow)
 			log.Println("Error:", err)
+			return
+		}
+		if radius <= 0 {
+			dialog.ShowError(errors.New("НЕКОРРЕКТНЫЙ РАДИУС"), myWindow)
+			log.Println("Error: radius <= 0")
 			return
 		}
 		f := parseCircMethod(methodSelect.Selected)
@@ -273,10 +279,20 @@ func SetupApp() {
 			log.Println("Error:", err)
 			return
 		}
+		if height <= 0 {
+			dialog.ShowError(errors.New("НЕКОРРЕКТНАЯ ВЫСОТА"), myWindow)
+			log.Println("Error: height <= 0")
+			return
+		}
 		width, err := strconv.ParseFloat(widthEntry.Text, 64)
 		if err != nil {
 			dialog.ShowError(errors.New("НЕКОРРЕКТНАЯ ШИРИНА"), myWindow)
 			log.Println("Error:", err)
+			return
+		}
+		if width <= 0 {
+			dialog.ShowError(errors.New("НЕКОРРЕКТНАЯ ШИРИНА"), myWindow)
+			log.Println("Error: width <= 0")
 			return
 		}
 		f := parseEllipseMethod(methodSelect.Selected)
@@ -330,10 +346,20 @@ func SetupApp() {
 			log.Println("Error:", err)
 			return
 		}
+		if minRad <= 0 {
+			dialog.ShowError(errors.New("НЕКОРРЕКТНЫЙ MIN R"), myWindow)
+			log.Println("Error: minRad <= 0")
+			return
+		}
 		maxRad, err := strconv.ParseFloat(circleMaxRadEntry.Text, 64)
 		if err != nil {
 			dialog.ShowError(errors.New("НЕКОРРЕКТНЫЙ MAX R"), myWindow)
 			log.Println("Error:", err)
+			return
+		}
+		if maxRad <= 0 {
+			dialog.ShowError(errors.New("НЕКОРРЕКТНЫЙ MAX R"), myWindow)
+			log.Println("Error: maxRad <= 0")
 			return
 		}
 		step, err := strconv.ParseFloat(circleStepEntry.Text, 64)
@@ -427,10 +453,20 @@ func SetupApp() {
 			log.Println("Error:", err)
 			return
 		}
+		if minHeight <= 0 {
+			dialog.ShowError(errors.New("НЕКОРРЕКТНАЯ MIN ВЫСОТА"), myWindow)
+			log.Println("Error: minHeight <= 0")
+			return
+		}
 		minWidth, err := strconv.ParseFloat(ellipseMinWidthEntry.Text, 64)
 		if err != nil {
 			dialog.ShowError(errors.New("НЕКОРРЕКТНАЯ MIN ШИРИНА"), myWindow)
 			log.Println("Error:", err)
+			return
+		}
+		if minWidth <= 0 {
+			dialog.ShowError(errors.New("НЕКОРРЕКТНАЯ MIN ШИРИНА"), myWindow)
+			log.Println("Error: minWidth <= 0")
 			return
 		}
 		step, err := strconv.ParseFloat(ellipseStepEntry.Text, 64)
@@ -445,6 +481,11 @@ func SetupApp() {
 			log.Println("Error:", err)
 			return
 		}
+		if cnt <= 0 {
+			dialog.ShowError(errors.New("НЕКОРРЕКТНОЕ КОЛИЧЕСТВО"), myWindow)
+			log.Println("Error: cnt <= 0")
+			return
+		}
 		f := parseEllipseMethod(methodSelect.Selected)
 		if stepOptionSelect.Selected == STEP_OPTIONS[0] {
 			h := minHeight
@@ -452,6 +493,11 @@ func SetupApp() {
 				points := f(xCenter, yCenter, minWidth, h)
 				pixels = getPixels(points)
 				h += step
+				if h <= 0 {
+					dialog.ShowError(errors.New("ДОСТИГНУТ РАЗМЕР 0"), myWindow)
+					log.Println("Error: size 0")
+					break
+				}
 			}
 		} else if stepOptionSelect.Selected == STEP_OPTIONS[1] {
 			w := minWidth
@@ -459,6 +505,11 @@ func SetupApp() {
 				points := f(xCenter, yCenter, w, minHeight)
 				pixels = getPixels(points)
 				w += step
+				if w <= 0 {
+					dialog.ShowError(errors.New("ДОСТИГНУТ РАЗМЕР 0"), myWindow)
+					log.Println("Error: size 0")
+					break
+				}
 			}
 		} else if stepOptionSelect.Selected == STEP_OPTIONS[2] {
 			h := minHeight
@@ -468,6 +519,11 @@ func SetupApp() {
 				pixels = getPixels(points)
 				w += step
 				h += step
+				if h <= 0 || w <= 0 {
+					dialog.ShowError(errors.New("ДОСТИГНУТ РАЗМЕР 0"), myWindow)
+					log.Println("Error: size 0")
+					break
+				}
 			}
 		}
 		raster.Refresh()
@@ -501,10 +557,20 @@ func SetupApp() {
 				log.Println("Error:", err)
 				return
 			}
+			if minRad <= 0 {
+				dialog.ShowError(errors.New("НЕКОРРЕКТНЫЙ MIN R"), myWindow)
+				log.Println("Error: minRad <= 0")
+				return
+			}
 			maxRad, err := strconv.ParseFloat(circleMaxRadEntry.Text, 64)
 			if err != nil {
 				dialog.ShowError(errors.New("НЕКОРРЕКТНЫЙ MAX R"), myWindow)
 				log.Println("Error:", err)
+				return
+			}
+			if maxRad <= 0 {
+				dialog.ShowError(errors.New("НЕКОРРЕКТНЫЙ MAX R"), myWindow)
+				log.Println("Error: maxRad <= 0")
 				return
 			}
 			step, err := strconv.ParseFloat(circleStepEntry.Text, 64)
@@ -533,10 +599,20 @@ func SetupApp() {
 				log.Println("Error:", err)
 				return
 			}
+			if minHeight <= 0 {
+				dialog.ShowError(errors.New("НЕКОРРЕКТНАЯ MIN ВЫСОТА"), myWindow)
+				log.Println("Error: minHeight <= 0")
+				return
+			}
 			minWidth, err := strconv.ParseFloat(ellipseMinWidthEntry.Text, 64)
 			if err != nil {
 				dialog.ShowError(errors.New("НЕКОРРЕКТНАЯ MIN ШИРИНА"), myWindow)
 				log.Println("Error:", err)
+				return
+			}
+			if minWidth <= 0 {
+				dialog.ShowError(errors.New("НЕКОРРЕКТНАЯ MIN ШИРИНА"), myWindow)
+				log.Println("Error: minWidth <= 0")
 				return
 			}
 			step, err := strconv.ParseFloat(ellipseStepEntry.Text, 64)
@@ -550,6 +626,16 @@ func SetupApp() {
 				dialog.ShowError(errors.New("НЕКОРРЕКТНОЕ КОЛИЧЕСТВО"), myWindow)
 				log.Println("Error:", err)
 				return
+			}
+			if cnt <= 0 {
+				dialog.ShowError(errors.New("НЕКОРРЕКТНОЕ КОЛИЧЕСТВО"), myWindow)
+				log.Println("Error: cnt <= 0")
+				return
+			}
+			if math.Min(minHeight, minWidth)+step*float64(cnt) <= 0 {
+				cnt -= int64(float64(cnt)+math.Min(minHeight, minWidth)/step) + 1
+				dialog.ShowError(errors.New("БЫЛ ДОСТИГНУТ РАЗМЕР 0"), myWindow)
+				log.Printf("Error: cnt = %d\n", cnt)
 			}
 			fileName := MeasureEllipse(minHeight, minWidth, step, cnt)
 			if fileName != "" {
