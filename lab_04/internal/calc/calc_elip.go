@@ -8,17 +8,17 @@ func EllipseCanon(xCenter, yCenter, width, height float64) []Point {
 	var points []Point
 	var lim int
 
-	xC := IntNum(xCenter)
-	yC := IntNum(yCenter)
+	xC := int(math.Round(xCenter))
+	yC := int(math.Round(yCenter))
 
-	lim = IntNum(math.Sqrt2 / 2 * width)
+	lim = int(math.Round(xCenter + width/math.Sqrt2))
 	for x := xC; x <= lim+xC; x++ {
-		y := IntNum(math.Sqrt(math.Pow(height, 2)*(1.0-math.Pow(float64(x)-xCenter, 2)/math.Pow(width, 2))) + yCenter)
+		y := int(math.Round(math.Sqrt(math.Pow(height, 2)*(1.0-math.Pow(float64(x)-xCenter, 2)/math.Pow(width, 2))) + yCenter))
 		points = QuaDup(points, x, y, xC, yC)
 	}
-	lim = IntNum(math.Sqrt2 / 2 * height)
+	lim = int(math.Round(xCenter + height/math.Sqrt2))
 	for y := yC; y <= lim+yC; y++ {
-		x := IntNum(math.Sqrt(math.Pow(width, 2)*(1.0-math.Pow(float64(y)-yCenter, 2)/math.Pow(height, 2))) + xCenter)
+		x := int(math.Round(math.Sqrt(math.Pow(width, 2)*(1.0-math.Pow(float64(y)-yCenter, 2)/math.Pow(height, 2))) + xCenter))
 		points = QuaDup(points, x, y, xC, yC)
 	}
 
@@ -28,14 +28,14 @@ func EllipseCanon(xCenter, yCenter, width, height float64) []Point {
 func EllipseParam(xCenter, yCenter, width, height float64) []Point {
 	var points []Point
 
-	xC := IntNum(xCenter)
-	yC := IntNum(yCenter)
+	xC := int(math.Round(xCenter))
+	yC := int(math.Round(yCenter))
 
 	step := 1.0 / math.Max(width, height)
 
-	for t := 0.0; t <= math.Pi/2; t += step {
-		x := xC + IntNum(width*math.Cos(t))
-		y := yC + IntNum(height*math.Sin(t))
+	for t := 0.0; t <= math.Pi/2+step; t += step {
+		x := xC + int(math.Round(width*math.Cos(t)))
+		y := yC + int(math.Round(height*math.Sin(t)))
 		points = QuaDup(points, x, y, xC, yC)
 	}
 
@@ -45,39 +45,10 @@ func EllipseParam(xCenter, yCenter, width, height float64) []Point {
 func EllipseBres(xCenter, yCenter, width, height float64) []Point {
 	var points []Point
 
-	xC := IntNum(xCenter)
-	yC := IntNum(yCenter)
-	w := IntNum(width)
-	h := IntNum(height)
-
-	x := 0
-	y := h
-	delta := h*h - w*w*(2*h+1)
-
-	points = QuaDup(points, x+xC, y+yC, xC, yC)
-
-	for y > 0 {
-		if delta <= 0 {
-			deltaTemp := 2*delta + w*w*(2*y-1)
-			x++
-			delta += h * h * (2*x + 1)
-			if deltaTemp >= 0 {
-				y--
-				delta += w * w * (-2*y + 1)
-			}
-
-		} else {
-			deltaTemp := 2*delta + h*h*(-2*x-1)
-			y--
-			delta += w * w * (-2*y + 1)
-			if deltaTemp < 0 {
-				x++
-				delta += h * h * (2*x + 1)
-			}
-		}
-
-		points = QuaDup(points, x+xC, y+yC, xC, yC)
-	}
+	// xC := int(math.Round(xCenter)
+	// yC := int(math.Round(yCenter)
+	// w := int(math.Round(width)
+	// h := int(math.Round(height)
 
 	return points
 }
@@ -85,47 +56,8 @@ func EllipseBres(xCenter, yCenter, width, height float64) []Point {
 func EllipseMidPoint(xCenter, yCenter, width, height float64) []Point {
 	var points []Point
 
-	xC := IntNum(xCenter)
-	yC := IntNum(yCenter)
-
-	x := 0.0
-	y := height
-
-	delta := height*height - width*width*height + 0.25*width*width
-	dx := 2 * height * height * x
-	dy := 2 * width * width * y
-
-	for dx > dy {
-		points = QuaDup(points, IntNum(x+xCenter), IntNum(y+yCenter), xC, yC)
-
-		x++
-		dx += 2 * height * height
-
-		if delta >= 0 {
-			y--
-			dy -= 2 * width * width
-			delta -= dy
-		}
-
-		delta += dx + height*height
-	}
-
-	delta = height*height*(x+0.5)*(x+0.5) + width*width*(y-1)*(y-1) - width*width*height*height
-
-	for y >= 0 {
-		points = QuaDup(points, IntNum(x+xCenter), IntNum(y+yCenter), xC, yC)
-
-		y--
-		dy -= 2 * width * width
-
-		if delta <= 0 {
-			x++
-			dx += 2 * height * height
-			delta += dx
-		}
-
-		delta -= dy - width*width
-	}
+	// xC := int(math.Round(xCenter)
+	// yC := int(math.Round(yCenter)
 
 	return points
 }

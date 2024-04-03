@@ -11,7 +11,7 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
-var NTESTS int = 10000
+var NTESTS int64 = 5000
 
 type Plot struct {
 	xVals []float64
@@ -69,17 +69,29 @@ func MeasureCircle(minRad, maxRad, step float64) string {
 		plot.name = fName
 
 		for r := minRad; r <= maxRad; r += step {
+			var testArr = []int64{}
+			var avr float64
 			var t int64 = 0
-			for i := 0; i < NTESTS; i++ {
+			var i int64 = 0
+			for ; i < NTESTS; i++ {
 				st := time.Now()
 				f(0, 0, r)
 				t += time.Since(st).Nanoseconds()
+				testArr = append(testArr, time.Since(st).Nanoseconds())
+
+				if i%100 == 99 {
+					avr = float64(t)/float64(i) + 1.0
+					if calcRSE(i+1, avr, calcStdev(testArr, avr)) <= 1 {
+						i++
+						break
+					}
+				}
 			}
 
-			var el float64 = float64(t) / float64(NTESTS)
+			avr = float64(t) / float64(i)
 
 			plot.xVals = append(plot.xVals, r)
-			plot.yVals = append(plot.yVals, el)
+			plot.yVals = append(plot.yVals, avr)
 		}
 		plots = append(plots, plot)
 	}
@@ -97,17 +109,29 @@ func MeasureEllipse(minHeight, minWidth, step float64, cnt int64) string {
 		w := minWidth
 		h := minHeight
 		for k := int64(0); k < cnt; k++ {
+			var testArr = []int64{}
+			var avr float64
 			var t int64 = 0
-			for i := 0; i < NTESTS; i++ {
+			var i int64 = 0
+			for ; i < NTESTS; i++ {
 				st := time.Now()
 				f(0, 0, w, h)
 				t += time.Since(st).Nanoseconds()
+				testArr = append(testArr, time.Since(st).Nanoseconds())
+
+				if i%100 == 99 {
+					avr = float64(t)/float64(i) + 1.0
+					if calcRSE(i+1, avr, calcStdev(testArr, avr)) <= 1 {
+						i++
+						break
+					}
+				}
 			}
 
-			var el float64 = float64(t) / float64(NTESTS)
+			avr = float64(t) / float64(i)
 
 			plot.xVals = append(plot.xVals, w)
-			plot.yVals = append(plot.yVals, el)
+			plot.yVals = append(plot.yVals, avr)
 
 			w += step
 			h += step

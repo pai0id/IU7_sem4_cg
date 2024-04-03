@@ -4,12 +4,11 @@ type Point struct {
 	X, Y int
 }
 
-func IntNum(num float64) int {
-	if num > 0 {
-		return int(num + 0.5)
-	} else {
-		return int(num - 0.5)
-	}
+func OctDup(points []Point, x, y, xCenter, yCenter int) []Point {
+	points = QuaDup(points, x, y, xCenter, yCenter)
+	points = QuaDup(points, y+xCenter-yCenter, x+yCenter-xCenter, xCenter, yCenter)
+
+	return points
 }
 
 func QuaDup(points []Point, x, y, xCenter, yCenter int) []Point {

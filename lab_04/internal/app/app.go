@@ -27,8 +27,7 @@ var METHODS = []string{
 	"Каноническое уравнение",
 	"Параметрическое уравнение",
 	"Алгоритм Брезенхема",
-	"Алгоритм средней точки",
-	// "Библиотечная функция",
+	// "Алгоритм средней точки",
 }
 
 var COLORS = []string{
@@ -68,7 +67,7 @@ func getColor(name string) color.Color {
 	case COLORS[4]:
 		return color.RGBA{R: 0, G: 0, B: 255, A: 255}
 	default:
-		return color.White
+		return color.RGBA{R: 255, G: 255, B: 255, A: 255}
 	}
 }
 
@@ -185,19 +184,18 @@ func SetupApp() {
 		raster.Refresh()
 		log.Println("Select set to", value)
 	})
-	bgColorSelect.SetSelected(COLORS[0])
-	bgColorV = getColor(COLORS[0])
+	bgColorSelect.SetSelected(COLORS[1])
+	bgColorV = getColor(COLORS[1])
 
 	colorLabel := canvas.NewText("Выберите цвет фигуры", theme.ForegroundColor())
 	colorLabel.TextSize = 12
 
 	colorSelect := widget.NewSelect(COLORS, func(value string) {
 		colorV = getColor(value)
-		raster.Refresh()
 		log.Println("Select set to", value)
 	})
-	colorSelect.SetSelected(COLORS[1])
-	colorV = getColor(COLORS[1])
+	colorSelect.SetSelected(COLORS[0])
+	colorV = getColor(COLORS[0])
 
 	colorC := container.NewVBox(bgColorLabel, bgColorSelect, colorLabel, colorSelect)
 
