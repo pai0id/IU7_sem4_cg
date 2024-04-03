@@ -68,9 +68,31 @@ func CircleBres(xCenter, yCenter, radius float64) []Point {
 func CircleMidPoint(xCenter, yCenter, radius float64) []Point {
 	var points []Point
 
-	// xC := int(math.Round(xCenter)
-	// yC := int(math.Round(yCenter)
-	// r := int(math.Round(radius)
+	xC := int(math.Round(xCenter))
+	yC := int(math.Round(yCenter))
+	r := int(math.Round(radius))
+
+	x := r
+	y := 0
+	p := 1 - r
+
+	points = OctDup(points, x+xC, y+yC, xC, yC)
+
+	for x >= y {
+		y++
+		if p < 0 {
+			p += 2*y + 1
+		} else {
+			x--
+			p += 2*y - 2*x + 1
+		}
+
+		if x < y {
+			break
+		}
+
+		points = OctDup(points, x+xC, y+yC, xC, yC)
+	}
 
 	return points
 }

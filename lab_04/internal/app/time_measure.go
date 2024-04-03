@@ -64,11 +64,16 @@ func MeasureCircle(minRad, maxRad, step float64) string {
 	var plots []Plot
 
 	for _, fName := range METHODS {
+		log.Printf("%s: \n", fName)
 		f := parseCircMethod(fName)
 		var plot Plot
 		plot.name = fName
 
 		for r := minRad; r <= maxRad; r += step {
+			percentage := int(r / maxRad * 100)
+			if percentage%10 == 0 {
+				log.Printf("Progress: %v%%\n", percentage)
+			}
 			var testArr = []int64{}
 			var avr float64
 			var t int64 = 0
@@ -102,6 +107,7 @@ func MeasureEllipse(minHeight, minWidth, step float64, cnt int64) string {
 	var plots []Plot
 
 	for _, fName := range METHODS {
+		log.Printf("%s: \n", fName)
 		f := parseEllipseMethod(fName)
 		var plot Plot
 		plot.name = fName
@@ -109,6 +115,10 @@ func MeasureEllipse(minHeight, minWidth, step float64, cnt int64) string {
 		w := minWidth
 		h := minHeight
 		for k := int64(0); k < cnt; k++ {
+			percentage := int(float64(k+1) / float64(cnt) * 100)
+			if percentage%10 == 0 {
+				log.Printf("Progress: %v%%\n", percentage)
+			}
 			var testArr = []int64{}
 			var avr float64
 			var t int64 = 0

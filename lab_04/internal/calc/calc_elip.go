@@ -45,10 +45,40 @@ func EllipseParam(xCenter, yCenter, width, height float64) []Point {
 func EllipseBres(xCenter, yCenter, width, height float64) []Point {
 	var points []Point
 
-	// xC := int(math.Round(xCenter)
-	// yC := int(math.Round(yCenter)
-	// w := int(math.Round(width)
-	// h := int(math.Round(height)
+	xC := int(math.Round(xCenter))
+	yC := int(math.Round(yCenter))
+	w := int(math.Round(width))
+	h := int(math.Round(height))
+
+	x := 0
+	y := h
+	delta := 4*h*h*(x+1)*(x+1) + w*w*((2*y-1)*(2*y-1)) - 4*w*w*h*h
+
+	for w*w*(2*y-1) > 2*h*h*(x+1) {
+		points = QuaDup(points, x+xC, y+yC, xC, yC)
+		if delta < 0 {
+			x++
+			delta += 4 * h * h * (2*x + 3)
+		} else {
+			x++
+			delta = delta - 8*w*w*(y-1) + 4*h*h*(2*x+3)
+			y--
+		}
+	}
+
+	delta = h*h*((2*x+1)*(2*x+1)) + 4*w*w*((y+1)*(y+1)) - 4*w*w*h*h
+
+	for y+1 != 0 {
+		points = QuaDup(points, x+xC, y+yC, xC, yC)
+		if delta < 0 {
+			y--
+			delta += 4 * w * w * (2*y + 3)
+		} else {
+			y--
+			delta = delta - 8*h*h*(x+1) + 4*w*w*(2*y+3)
+			x++
+		}
+	}
 
 	return points
 }
@@ -56,8 +86,52 @@ func EllipseBres(xCenter, yCenter, width, height float64) []Point {
 func EllipseMidPoint(xCenter, yCenter, width, height float64) []Point {
 	var points []Point
 
-	// xC := int(math.Round(xCenter)
-	// yC := int(math.Round(yCenter)
+	xC := int(math.Round(xCenter))
+	yC := int(math.Round(yCenter))
+	w := int(math.Round(width))
+	h := int(math.Round(height))
+
+	x := 0
+	y := h
+
+	points = QuaDup(points, x+xC, y+yC, xC, yC)
+
+	border := int(math.Round(float64(w) / math.Sqrt(1+float64(h*h)/float64(w*w))))
+	delta := h*h - int(math.Round(float64(w*w)*(float64(h)-0.25)))
+
+	for x <= border {
+		if delta < 0 {
+			x++
+			delta += 2*h*h*x + 1
+		} else {
+			x++
+			y--
+			delta += 2*h*h*x - 2*w*w*y + 1
+		}
+
+		points = QuaDup(points, x+xC, y+yC, xC, yC)
+	}
+
+	x = w
+	y = 0
+
+	points = QuaDup(points, x+xC, y+yC, xC, yC)
+
+	border = int(math.Round(float64(h) / math.Sqrt(1+float64(w*w)/float64(h*h))))
+	delta = w*w - int(math.Round(float64(h*h)*(float64(w)-0.25)))
+
+	for y <= border {
+		if delta < 0 {
+			y++
+			delta += 2*w*w*y + 1
+		} else {
+			x--
+			y++
+			delta += 2*w*w*y - 2*h*h*x + 1
+		}
+
+		points = QuaDup(points, x+xC, y+yC, xC, yC)
+	}
 
 	return points
 }
