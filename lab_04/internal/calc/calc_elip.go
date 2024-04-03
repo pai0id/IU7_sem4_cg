@@ -11,15 +11,14 @@ func EllipseCanon(xCenter, yCenter, width, height float64) []Point {
 	xC := IntNum(xCenter)
 	yC := IntNum(yCenter)
 
-	lim = IntNum(xCenter + width/math.Sqrt(1+math.Pow(height, 2)/math.Pow(width, 2)))
-	for x := xC; x <= lim; x++ {
-		y := IntNum(math.Sqrt(math.Pow(width, 2)*math.Pow(height, 2)-math.Pow(float64(x)-xCenter, 2)*math.Pow(height, 2))/width + yCenter)
+	lim = IntNum(math.Sqrt2 / 2 * width)
+	for x := xC; x <= lim+xC; x++ {
+		y := IntNum(math.Sqrt(math.Pow(height, 2)*(1.0-math.Pow(float64(x)-xCenter, 2)/math.Pow(width, 2))) + yCenter)
 		points = QuaDup(points, x, y, xC, yC)
 	}
-
-	lim = IntNum(yCenter + height/math.Sqrt(1+math.Pow(width, 2)/math.Pow(height, 2)))
-	for y := lim; y > yC; y-- {
-		x := IntNum(math.Sqrt(math.Pow(width, 2)*math.Pow(height, 2)-math.Pow(float64(y)-yCenter, 2)*math.Pow(width, 2))/height + xCenter)
+	lim = IntNum(math.Sqrt2 / 2 * height)
+	for y := yC; y <= lim+yC; y++ {
+		x := IntNum(math.Sqrt(math.Pow(width, 2)*(1.0-math.Pow(float64(y)-yCenter, 2)/math.Pow(height, 2))) + xCenter)
 		points = QuaDup(points, x, y, xC, yC)
 	}
 
@@ -34,7 +33,7 @@ func EllipseParam(xCenter, yCenter, width, height float64) []Point {
 
 	step := 1.0 / math.Max(width, height)
 
-	for t := 0.0; t <= math.Pi/2+step; t += step {
+	for t := 0.0; t <= math.Pi/2; t += step {
 		x := xC + IntNum(width*math.Cos(t))
 		y := yC + IntNum(height*math.Sin(t))
 		points = QuaDup(points, x, y, xC, yC)

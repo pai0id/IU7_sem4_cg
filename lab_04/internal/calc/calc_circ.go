@@ -10,10 +10,14 @@ func CircleCanon(xCenter, yCenter, radius float64) []Point {
 	xC := IntNum(xCenter)
 	yC := IntNum(yCenter)
 
-	lim := xC + IntNum(radius/math.Sqrt2) + 1
-	for x := xC; x < lim; x++ {
-		y := IntNum(math.Sqrt(math.Pow(radius, 2)-math.Pow(float64(x-xC), 2)) + yCenter)
-		points = OctDup(points, x, y, xC, yC)
+	lim := IntNum(math.Sqrt2 / 2 * radius)
+	for x := xC; x <= lim+xC; x++ {
+		y := IntNum(math.Sqrt(radius*radius-math.Pow(float64(x)-xCenter, 2)) + yCenter)
+		points = QuaDup(points, x, y, xC, yC)
+	}
+	for y := yC; y < lim+yC; y++ {
+		x := IntNum(math.Sqrt(radius*radius-math.Pow(float64(y)-yCenter, 2)) + xCenter)
+		points = QuaDup(points, x, y, xC, yC)
 	}
 
 	return points
@@ -27,10 +31,10 @@ func CircleParam(xCenter, yCenter, radius float64) []Point {
 
 	step := 1.0 / radius
 
-	for t := 0.0; t <= math.Pi/4+step; t += step {
+	for t := 0.0; t <= math.Pi/2; t += step {
 		x := xC + IntNum(radius*math.Cos(t))
 		y := yC + IntNum(radius*math.Sin(t))
-		points = OctDup(points, x, y, xC, yC)
+		points = QuaDup(points, x, y, xC, yC)
 	}
 
 	return points
@@ -47,7 +51,7 @@ func CircleBres(xCenter, yCenter, radius float64) []Point {
 	y := IntNum(radius)
 	delta := 2 * (1 - r)
 
-	points = OctDup(points, x+xC, y+yC, xC, yC)
+	points = QuaDup(points, x+xC, y+yC, xC, yC)
 
 	for x < y {
 		if delta <= 0 {
@@ -71,7 +75,7 @@ func CircleBres(xCenter, yCenter, radius float64) []Point {
 			}
 		}
 
-		points = OctDup(points, x+xC, y+yC, xC, yC)
+		points = QuaDup(points, x+xC, y+yC, xC, yC)
 	}
 
 	return points
@@ -87,7 +91,7 @@ func CircleMidPoint(xCenter, yCenter, radius float64) []Point {
 	x := r
 	y := 0
 
-	points = OctDup(points, x+xC, y+yC, xC, yC)
+	points = QuaDup(points, x+xC, y+yC, xC, yC)
 	delta := 1 - r
 
 	for x > y {
@@ -97,7 +101,7 @@ func CircleMidPoint(xCenter, yCenter, radius float64) []Point {
 			delta -= 2*x - 2
 		}
 		delta += 2*y + 3
-		points = OctDup(points, x+xC, y+yC, xC, yC)
+		points = QuaDup(points, x+xC, y+yC, xC, yC)
 	}
 
 	return points

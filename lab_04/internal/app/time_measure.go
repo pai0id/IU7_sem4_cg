@@ -11,11 +11,12 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
-var NTESTS int = 500
+var NTESTS int = 10000
 
 type Plot struct {
 	xVals []float64
 	yVals []float64
+	name  string
 }
 
 func drawPlots(plots []Plot, xName string) string {
@@ -48,6 +49,7 @@ func drawPlots(plots []Plot, xName string) string {
 		lp.LineStyle.Color = colors[i%len(colors)]
 
 		p.Add(lp)
+		p.Legend.Add(plot.name, lp)
 	}
 
 	if err := p.Save(4*vg.Inch, 4*vg.Inch, "data/plots.png"); err != nil {
@@ -64,6 +66,7 @@ func MeasureCircle(minRad, maxRad, step float64) string {
 	for _, fName := range METHODS {
 		f := parseCircMethod(fName)
 		var plot Plot
+		plot.name = fName
 
 		for r := minRad; r <= maxRad; r += step {
 			var t int64 = 0
@@ -89,6 +92,7 @@ func MeasureEllipse(minHeight, minWidth, step float64, cnt int64) string {
 	for _, fName := range METHODS {
 		f := parseEllipseMethod(fName)
 		var plot Plot
+		plot.name = fName
 
 		w := minWidth
 		h := minHeight

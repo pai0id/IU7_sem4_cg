@@ -104,6 +104,22 @@ func getPixels(points []calc.Point) []Pixel {
 	return pixels
 }
 
+// func getPixels(points []calc.Point) []Pixel {
+// 	for _, point := range points {
+// 		for i := 0; i < len(pixels); i++ {
+// 			if (pixels[i].point.X == point.X || pixels[i].point.X == point.X+1 || pixels[i].point.X == point.X-1) &&
+// 				(pixels[i].point.Y == point.Y || pixels[i].point.Y == point.Y+1 || pixels[i].point.Y == point.Y-1) {
+// 				pixels = removePixel(pixels, i)
+// 				i--
+// 			}
+// 		}
+// 	}
+// 	for _, point := range points {
+// 		pixels = append(pixels, Pixel{point, colorV})
+// 	}
+// 	return pixels
+// }
+
 func parseCircMethod(method string) func(xC float64, yC float64, r float64) []calc.Point {
 	switch method {
 	case METHODS[0]:
