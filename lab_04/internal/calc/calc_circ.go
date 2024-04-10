@@ -90,10 +90,6 @@ func CircleMidPoint(xCenter, yCenter, radius float64) []Point {
 			x--
 			p += 2*y - 2*x + 1
 		}
-
-		if x < y {
-			break
-		}
 	}
 
 	return points
