@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"log"
 	"strconv"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -17,11 +18,6 @@ import (
 
 	"lab_05/internal/graphics"
 )
-
-type Pixel struct {
-	point  graphics.IPoint
-	pColor color.Color
-}
 
 type Dot struct {
 	point   graphics.FPoint
@@ -43,7 +39,7 @@ var colorV color.Color
 var raster *canvas.Raster
 var myWindow fyne.Window
 
-var pixels = []Pixel{}
+var pixels = make(map[graphics.IPoint]color.Color)
 var dots = []Dot{}
 var dotsTable *widget.Table
 var currFig int = 1
@@ -62,7 +58,7 @@ func addDot(p graphics.FPoint) {
 			log.Println("Error: Та же точка")
 			return
 		}
-		pixels = getPixels(graphics.LineCDA(dot.point, dots[len(dots)-1].point))
+		getPixels(graphics.LineCDA(dot.point, dots[len(dots)-1].point))
 		raster.Refresh()
 	}
 	dots = append(dots, dot)
@@ -76,6 +72,9 @@ func closeFig() {
 		if v.fig_num == currFig {
 			cnt++
 		}
+		if cnt > 2 || v.fig_num > currFig {
+			break
+		}
 	}
 	if cnt <= 2 {
 		dialog.ShowError(errors.New("НЕЛЬЗЯ ЗАКРЫТЬ ФИГУРУ"), myWindow)
@@ -85,7 +84,7 @@ func closeFig() {
 
 	for _, v := range dots {
 		if v.fig_num == currFig {
-			pixels = getPixels(graphics.LineCDA(v.point, dots[len(dots)-1].point))
+			getPixels(graphics.LineCDA(v.point, dots[len(dots)-1].point))
 			dots[len(dots)-1].end = &v
 			raster.Refresh()
 			break
@@ -136,16 +135,15 @@ func getColor(name string) color.Color {
 }
 
 func drawCanvas(x, y, _, _ int) color.Color {
-	for _, pixel := range pixels {
-		if x == pixel.point.X && y == pixel.point.Y {
-			return pixel.pColor
-		}
+	if colr, keyExists := pixels[graphics.IPoint{X: x, Y: y}]; keyExists {
+		return colr
+	} else {
+		return bgColorV
 	}
-	return bgColorV
 }
 
 func clearCanvas() {
-	pixels = nil
+	pixels = make(map[graphics.IPoint]color.Color)
 	dots = nil
 	currFig = 1
 	raster.Refresh()
@@ -163,36 +161,34 @@ func drawFigs() {
 			continue
 		}
 		if dots[i].end != nil {
-			pixels = getPixels(graphics.LineCDA(dots[i].point, dots[i-1].point))
-			pixels = getPixels(graphics.LineCDA(dots[i].point, dots[i].end.point))
+			getPixels(graphics.LineCDA(dots[i].point, dots[i-1].point))
+			getPixels(graphics.LineCDA(dots[i].point, dots[i].end.point))
 			continue
 		}
-		pixels = getPixels(graphics.LineCDA(dots[i].point, dots[i-1].point))
+		getPixels(graphics.LineCDA(dots[i].point, dots[i-1].point))
 	}
 }
 
 func clearFills() {
-	pixels = nil
+	pixels = make(map[graphics.IPoint]color.Color)
 	drawFigs()
 	raster.Refresh()
 }
 
-func removePixel(pixels []Pixel, i int) []Pixel {
-	pixels[i] = pixels[len(pixels)-1]
-	return pixels[:len(pixels)-1]
+func getPixels(points []graphics.IPoint) {
+	for _, point := range points {
+		pixels[point] = colorV
+	}
 }
 
-func getPixels(points []graphics.IPoint) []Pixel {
+func getPixelsWDel(points []graphics.IPoint) {
 	for _, point := range points {
-		for i, pixel := range pixels {
-			if pixel.point.X == point.X && pixel.point.Y == point.Y {
-				pixels = removePixel(pixels, i)
-				break
-			}
+		if _, keyExists := pixels[point]; keyExists {
+			delete(pixels, point)
+		} else {
+			pixels[point] = colorV
 		}
-		pixels = append(pixels, Pixel{point, colorV})
 	}
-	return pixels
 }
 
 func createVertSepRect(height float32) *canvas.Rectangle {
@@ -330,7 +326,7 @@ func SetupApp() {
 		for _, v := range dots {
 			fig = append(fig, v.point)
 			if v.end != nil {
-				pixels = getPixels(graphics.Fill(fig))
+				getPixelsWDel(graphics.Fill(fig))
 				raster.Refresh()
 				fig = nil
 			}
@@ -344,8 +340,9 @@ func SetupApp() {
 			if v.end != nil {
 				states := graphics.FillWDelay(fig)
 				for _, s := range states {
-					pixels = getPixels(s)
+					getPixelsWDel(s)
 					raster.Refresh()
+					time.Sleep(time.Millisecond)
 				}
 				fig = nil
 			}
@@ -359,7 +356,7 @@ func SetupApp() {
 			fig = append(fig, v.point)
 			if v.end != nil {
 				time += MeasureTime(fig)
-				pixels = getPixels(graphics.Fill(fig))
+				getPixelsWDel(graphics.Fill(fig))
 				raster.Refresh()
 				fig = nil
 			}
