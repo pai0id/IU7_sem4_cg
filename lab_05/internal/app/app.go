@@ -337,6 +337,10 @@ func SetupApp() {
 				dots[i].filled = true
 			}
 		}
+		tmp := colorV
+		colorV = getColor(COLORS[2])
+		drawFigs()
+		colorV = tmp
 	})
 
 	fillSleepButton := widget.NewButton("Заполнить с задержкой", func() {
@@ -360,6 +364,10 @@ func SetupApp() {
 				dots[i].filled = true
 			}
 		}
+		tmp := colorV
+		colorV = getColor(COLORS[2])
+		drawFigs()
+		colorV = tmp
 	})
 
 	fillTimeButton := widget.NewButton("Замерить время", func() {
@@ -380,6 +388,10 @@ func SetupApp() {
 				dots[i].filled = true
 			}
 		}
+		tmp := colorV
+		colorV = getColor(COLORS[2])
+		drawFigs()
+		colorV = tmp
 		dialog.ShowInformation("Результат", fmt.Sprintf("Затрачено %d нс", t_all), myWindow)
 	})
 
