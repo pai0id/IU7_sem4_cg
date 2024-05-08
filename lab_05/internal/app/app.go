@@ -23,6 +23,7 @@ type Dot struct {
 	point   graphics.FPoint
 	fig_num int
 	end     *Dot
+	filled  bool
 }
 
 var COLORS = []string{
@@ -39,7 +40,8 @@ var colorV color.Color
 var raster *canvas.Raster
 var myWindow fyne.Window
 
-var pixels = make(map[graphics.IPoint]color.Color)
+var pixels = graphics.SafePixels{PXS: make(map[graphics.IPoint]color.Color)}
+
 var dots = []Dot{}
 var dotsTable *widget.Table
 var currFig int = 1
@@ -51,7 +53,7 @@ type tappableCanvasObject struct {
 }
 
 func addDot(p graphics.FPoint) {
-	dot := Dot{point: p, fig_num: currFig, end: nil}
+	dot := Dot{point: p, fig_num: currFig, end: nil, filled: false}
 	if len(dots) != 0 && currFig == dots[len(dots)-1].fig_num {
 		if dot.point == dots[len(dots)-1].point {
 			dialog.ShowError(errors.New("ТА ЖЕ ТОЧКА"), myWindow)
@@ -135,15 +137,19 @@ func getColor(name string) color.Color {
 }
 
 func drawCanvas(x, y, _, _ int) color.Color {
-	if colr, keyExists := pixels[graphics.IPoint{X: x, Y: y}]; keyExists {
-		return colr
+	var res color.Color
+	pixels.MU.Lock()
+	if colr, keyExists := pixels.PXS[graphics.IPoint{X: x, Y: y}]; keyExists {
+		res = colr
 	} else {
-		return bgColorV
+		res = bgColorV
 	}
+	pixels.MU.Unlock()
+	return res
 }
 
 func clearCanvas() {
-	pixels = make(map[graphics.IPoint]color.Color)
+	pixels = graphics.SafePixels{PXS: make(map[graphics.IPoint]color.Color)}
 	dots = nil
 	currFig = 1
 	raster.Refresh()
@@ -170,25 +176,20 @@ func drawFigs() {
 }
 
 func clearFills() {
-	pixels = make(map[graphics.IPoint]color.Color)
+	pixels = graphics.SafePixels{PXS: make(map[graphics.IPoint]color.Color)}
+	for i := range dots {
+		dots[i].filled = false
+	}
 	drawFigs()
 	raster.Refresh()
 }
 
 func getPixels(points []graphics.IPoint) {
+	pixels.MU.Lock()
 	for _, point := range points {
-		pixels[point] = colorV
+		pixels.PXS[point] = colorV
 	}
-}
-
-func getPixelsWDel(points []graphics.IPoint) {
-	for _, point := range points {
-		if _, keyExists := pixels[point]; keyExists {
-			delete(pixels, point)
-		} else {
-			pixels[point] = colorV
-		}
-	}
+	pixels.MU.Unlock()
 }
 
 func createVertSepRect(height float32) *canvas.Rectangle {
@@ -323,45 +324,63 @@ func SetupApp() {
 
 	fillButton := widget.NewButton("Заполнить", func() {
 		var fig []graphics.FPoint
-		for _, v := range dots {
+		for i, v := range dots {
 			fig = append(fig, v.point)
 			if v.end != nil {
-				getPixelsWDel(graphics.Fill(fig))
+				if v.filled {
+					fig = nil
+					continue
+				}
+				graphics.Fill(&pixels, fig, colorV)
 				raster.Refresh()
 				fig = nil
+				dots[i].filled = true
 			}
 		}
 	})
 
 	fillSleepButton := widget.NewButton("Заполнить с задержкой", func() {
 		var fig []graphics.FPoint
-		for _, v := range dots {
+		for i, v := range dots {
 			fig = append(fig, v.point)
 			if v.end != nil {
-				states := graphics.FillWDelay(fig)
-				for _, s := range states {
-					getPixelsWDel(s)
+				if v.filled {
+					fig = nil
+					continue
+				}
+				c := make(chan int)
+				cnt := 0
+				go graphics.FillWDelay(&pixels, fig, colorV, c)
+				for n := range c {
+					cnt += n
 					raster.Refresh()
-					time.Sleep(time.Millisecond)
+					time.Sleep(time.Millisecond * 10)
 				}
 				fig = nil
+				dots[i].filled = true
 			}
 		}
 	})
 
 	fillTimeButton := widget.NewButton("Замерить время", func() {
 		var fig []graphics.FPoint
-		var time float64 = 0
-		for _, v := range dots {
+		var t_all int64 = 0
+		for i, v := range dots {
 			fig = append(fig, v.point)
 			if v.end != nil {
-				time += MeasureTime(fig)
-				getPixelsWDel(graphics.Fill(fig))
+				if v.filled {
+					fig = nil
+					continue
+				}
+				st := time.Now()
+				graphics.Fill(&pixels, fig, colorV)
+				t_all += time.Since(st).Nanoseconds()
 				raster.Refresh()
 				fig = nil
+				dots[i].filled = true
 			}
 		}
-		dialog.ShowInformation("Результат", fmt.Sprintf("Затрачено %.2f нс", time), myWindow)
+		dialog.ShowInformation("Результат", fmt.Sprintf("Затрачено %d нс", t_all), myWindow)
 	})
 
 	fillButtonsC := container.NewVBox(fillButton, fillSleepButton, fillTimeButton)
