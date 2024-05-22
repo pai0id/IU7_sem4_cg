@@ -241,7 +241,7 @@ func SetupApp() {
 	methodLabel1.Alignment = fyne.TextAlignCenter
 	methodLabel2 := canvas.NewText("заполнения", theme.ForegroundColor())
 	methodLabel2.Alignment = fyne.TextAlignCenter
-	methodLabel3 := canvas.NewText("по ребрам", theme.ForegroundColor())
+	methodLabel3 := canvas.NewText("с затравкой", theme.ForegroundColor())
 	methodLabel3.Alignment = fyne.TextAlignCenter
 
 	methodLabelC := container.NewVBox(methodLabel1, methodLabel2, methodLabel3)

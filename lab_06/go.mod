@@ -2,7 +2,10 @@ module lab_06
 
 go 1.22.1
 
-require fyne.io/fyne/v2 v2.4.4
+require (
+	fyne.io/fyne/v2 v2.4.4
+	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
+)
 
 require (
 	fyne.io/systray v1.10.1-0.20231115130155-104f5ef7839e // indirect
@@ -17,7 +20,6 @@ require (
 	github.com/go-text/render v0.0.0-20240129162809-b6410f7d78ad // indirect
 	github.com/go-text/typesetting v0.1.1 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
-	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jsummers/gobmp v0.0.0-20230614200233-a9de23ed2e25 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
