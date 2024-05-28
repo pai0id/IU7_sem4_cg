@@ -15,7 +15,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
-	"lab_07/internal/graphics"
+	"lab_08/internal/graphics"
 )
 
 var COLORS = []string{
@@ -42,8 +42,8 @@ var (
 var pixels = graphics.SafePixels{PXS: make(map[graphics.IPoint]color.Color)}
 
 var (
-	currRect graphics.Rect
-	inRect   bool = false
+	currPoly graphics.Polygon = graphics.Polygon{}
+	inPoly   bool             = false
 )
 
 var (
@@ -58,25 +58,36 @@ type tappableCanvasObject struct {
 }
 
 func addRectDot(p graphics.FPoint) {
-	if inRect {
-		if currRect.P1 == p {
+	if inPoly {
+		prev := currPoly.Points[len(currPoly.Points)-1]
+		if prev == p {
 			dialog.ShowError(errors.New("ТА ЖЕ ТОЧКА"), myWindow)
 			log.Println("Error: Та же точка")
 			return
 		}
-		currRect.P2 = p
-		graphics.DrawRect(&pixels, currRect, areaColorV)
+		currPoly.Points = append(currPoly.Points, p)
+		graphics.DrawLine(&pixels, graphics.Line{P1: p, P2: prev}, areaColorV)
 		raster.Refresh()
-
-		inRect = false
-		unlockButtons()
 	} else {
 		clearCanvas()
-		currRect.P1 = p
+		currPoly.Points = append(currPoly.Points, p)
 
-		inRect = true
+		inPoly = true
 		lockButtons()
 	}
+}
+
+func linkPoly() {
+	if len(currPoly.Points) < 3 {
+		dialog.ShowError(errors.New("НЕТ ТРЕХ ТОЧЕК"), myWindow)
+		log.Println("Error: Нет трех точек")
+		return
+	}
+	graphics.DrawLine(&pixels, graphics.Line{P1: currPoly.Points[0], P2: currPoly.Points[len(currPoly.Points)-1]}, areaColorV)
+	raster.Refresh()
+
+	inPoly = false
+	unlockButtons()
 }
 
 func addLineDot(p graphics.FPoint) {
@@ -91,13 +102,50 @@ func addLineDot(p graphics.FPoint) {
 		raster.Refresh()
 
 		inLine = false
-		unlockButtons()
+		if !inPoly {
+			unlockButtons()
+		}
 	} else {
 		currLines = append(currLines, graphics.Line{P1: p})
 
 		inLine = true
 		lockButtons()
 	}
+}
+
+func addParallelLines() {
+	if len(currPoly.Points) < 3 || inPoly {
+		dialog.ShowError(errors.New("НЕТ ПОЛИГОНА"), myWindow)
+		log.Println("Error: Нет пролигона")
+		return
+	}
+
+	for i := range currPoly.Points {
+		var p1, p2, newP1, newP2 graphics.FPoint
+		var newLine graphics.Line
+
+		if i != len(currPoly.Points)-1 {
+			p1 = currPoly.Points[i]
+			p2 = currPoly.Points[i+1]
+		} else {
+			p1 = currPoly.Points[i]
+			p2 = currPoly.Points[0]
+		}
+
+		newP1 = graphics.FPoint{X: p1.X - 10, Y: p1.Y - 10}
+		newP2 = graphics.FPoint{X: p2.X - 10, Y: p2.Y - 10}
+		newLine = graphics.Line{P1: newP1, P2: newP2}
+		currLines = append(currLines, newLine)
+		graphics.DrawLine(&pixels, newLine, linePrimeColorV)
+
+		newP1 = graphics.FPoint{X: p1.X + 10, Y: p1.Y + 10}
+		newP2 = graphics.FPoint{X: p2.X + 10, Y: p2.Y + 10}
+		newLine = graphics.Line{P1: newP1, P2: newP2}
+		currLines = append(currLines, newLine)
+		graphics.DrawLine(&pixels, newLine, linePrimeColorV)
+	}
+
+	raster.Refresh()
 }
 
 func MakeTappable(canvas fyne.CanvasObject, onTapped func(x, y float64), onTappedSecondary func(x, y float64)) *tappableCanvasObject {
@@ -170,7 +218,7 @@ func drawCanvas(x, y, _, _ int) color.Color {
 func clearCanvas() {
 	pixels = graphics.SafePixels{PXS: make(map[graphics.IPoint]color.Color)}
 	currLines = []graphics.Line{}
-	currRect = graphics.Rect{}
+	currPoly = graphics.Polygon{}
 	raster.Refresh()
 }
 
@@ -192,7 +240,7 @@ func SetupApp() {
 
 	methodLabel1 := canvas.NewText("Алгоритм", theme.ForegroundColor())
 	methodLabel1.Alignment = fyne.TextAlignCenter
-	methodLabel2 := canvas.NewText("Сазерленда-Коэна", theme.ForegroundColor())
+	methodLabel2 := canvas.NewText("Кируса-Бека", theme.ForegroundColor())
 	methodLabel2.Alignment = fyne.TextAlignCenter
 
 	methodLabelC := container.NewVBox(methodLabel1, methodLabel2)
@@ -233,16 +281,33 @@ func SetupApp() {
 	sepRect1 := createVertSepRect(methodC.MinSize().Height)
 
 	sepButton := widget.NewButton("Отсечь", func() {
-		for _, l := range currLines {
-			graphics.SutherlandCohen(&pixels, currRect, l, lineSepColorV)
+		if len(currPoly.Points) < 3 || inPoly {
+			dialog.ShowError(errors.New("НЕТ ПОЛИГОНА"), myWindow)
+			log.Println("Error: Нет пролигона")
+			return
 		}
+		norm := graphics.IsConvex(currPoly)
+		if norm == 0 {
+			dialog.ShowError(errors.New("ОТСЕКАТЕЛЬ НЕ ВЫПУКЛЫЙ"), myWindow)
+			log.Println("Error: Не выпуклый")
+			return
+		}
+		for _, l := range currLines {
+			graphics.CyrusBeck(&pixels, currPoly, norm, l, lineSepColorV)
+		}
+		raster.Refresh()
 	})
 	buttons = append(buttons, sepButton)
 
 	clearCanvasButton := widget.NewButton("Очистить экран", clearCanvas)
 	buttons = append(buttons, clearCanvasButton)
 
-	canvasButtonsC := container.NewVBox(sepButton, clearCanvasButton)
+	linkPolyButton := widget.NewButton("Замкнуть", linkPoly)
+
+	addParallelLinesButton := widget.NewButton("Добавить параллельные линии", addParallelLines)
+	buttons = append(buttons, addParallelLinesButton)
+
+	canvasButtonsC := container.NewVBox(sepButton, clearCanvasButton, linkPolyButton, addParallelLinesButton)
 
 	upperFrame := container.NewHBox(methodC, sepRect0, colorC, sepRect1, canvasButtonsC)
 

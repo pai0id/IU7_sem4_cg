@@ -126,5 +126,5 @@ func SutherlandCohen(pixels *SafePixels, r Rect, l Line, c color.Color) {
 		l.P1.Y = o[i]
 	}
 
-	LineCDA(pixels, l, c)
+	drawLine(pixels, l, c)
 }
