@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"log"
+	"math"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -34,11 +35,21 @@ var (
 )
 
 var (
-	raster     *canvas.Raster
-	myWindow   fyne.Window
-	buttons    []*widget.Button
-	linkButton *widget.Button
+	raster          *canvas.Raster
+	myWindow        fyne.Window
+	buttons         []*widget.Button
+	drawModeButtons []*widget.Button
+	linkButton      *widget.Button
 )
+
+var MODES = []string{
+	"Рисовать любые",
+	"Рисовать верт./гор.",
+	"Рисовать параллельные",
+	"Рисовать по вершинам",
+}
+
+var currMode string = MODES[0]
 
 var pixels = graphics.SafePixels{PXS: make(map[graphics.IPoint]color.Color)}
 
@@ -66,6 +77,15 @@ func addSepDot(p graphics.FPoint) {
 			log.Println("Error: Та же точка")
 			return
 		}
+		if currMode == MODES[1] {
+			deltX := math.Abs(prev.X - p.X)
+			deltY := math.Abs(prev.Y - p.Y)
+			if deltX > deltY {
+				p = graphics.FPoint{X: p.X, Y: prev.Y}
+			} else {
+				p = graphics.FPoint{X: prev.X, Y: p.Y}
+			}
+		}
 		currSep.Points = append(currSep.Points, p)
 		graphics.DrawLine(&pixels, graphics.Line{P1: p, P2: prev}, sepColorV)
 		raster.Refresh()
@@ -74,7 +94,7 @@ func addSepDot(p graphics.FPoint) {
 		currSep.Points = append(currSep.Points, p)
 
 		inSep = true
-		lockButtons()
+		lockButtons(buttons)
 		linkButton.Enable()
 	}
 }
@@ -90,8 +110,44 @@ func linkSep() {
 
 	currSep.Points = append(currSep.Points, currSep.Points[0])
 	inSep = false
-	unlockButtons()
+	unlockButtons(buttons)
 	linkButton.Disable()
+}
+
+func findParallel(prev, curr graphics.FPoint) graphics.FPoint {
+	line := graphics.Line{P1: prev, P2: curr}
+	minCos := math.Abs(graphics.GetCos(line, graphics.Line{P1: currSep.Points[0], P2: currSep.Points[1]}))
+	for i := range currSep.Points {
+		var currAng float64
+		if i == len(currSep.Points)-1 {
+			currAng = math.Abs(graphics.GetCos(line, graphics.Line{P1: currSep.Points[i], P2: currSep.Points[0]}))
+		} else {
+			currAng = math.Abs(graphics.GetCos(line, graphics.Line{P1: currSep.Points[i], P2: currSep.Points[i+1]}))
+		}
+
+		if currAng > minCos {
+			minCos = currAng
+		}
+	}
+
+	angle := math.Acos(minCos)
+
+	center := prev
+	p := curr
+
+	cos := minCos
+	sin := math.Sin(angle)
+
+	p.X -= center.X
+	p.Y -= center.Y
+
+	x := p.X*cos - p.Y*sin
+	y := p.X*sin + p.Y*cos
+
+	p.X = x + center.X
+	p.Y = y + center.Y
+
+	return graphics.FPoint{X: p.X, Y: p.Y}
 }
 
 func addPolyDot(p graphics.FPoint) {
@@ -102,6 +158,28 @@ func addPolyDot(p graphics.FPoint) {
 			log.Println("Error: Та же точка")
 			return
 		}
+		if currMode == MODES[1] {
+			deltX := math.Abs(prev.X - p.X)
+			deltY := math.Abs(prev.Y - p.Y)
+			if deltX > deltY {
+				p = graphics.FPoint{X: p.X, Y: prev.Y}
+			} else {
+				p = graphics.FPoint{X: prev.X, Y: p.Y}
+			}
+		} else if currMode == MODES[2] && len(currSep.Points) != 0 {
+			p = findParallel(prev, p)
+		} else if currMode == MODES[3] && len(currSep.Points) != 0 {
+			minDelt := math.Abs(currSep.Points[0].X-p.X) + math.Abs(currSep.Points[0].Y-p.Y)
+			currP := currSep.Points[0]
+			for _, v := range currSep.Points {
+				delt := math.Abs(v.X-p.X) + math.Abs(v.Y-p.Y)
+				if delt < minDelt {
+					minDelt = delt
+					currP = v
+				}
+			}
+			p = currP
+		}
 		currPoly.Points = append(currPoly.Points, p)
 		graphics.DrawLine(&pixels, graphics.Line{P1: p, P2: prev}, polyPrimeColorV)
 		raster.Refresh()
@@ -110,7 +188,7 @@ func addPolyDot(p graphics.FPoint) {
 		currPoly.Points = append(currPoly.Points, p)
 
 		inPoly = true
-		lockButtons()
+		lockButtons(buttons)
 		linkButton.Enable()
 	}
 }
@@ -126,7 +204,7 @@ func linkPoly() {
 
 	currPoly.Points = append(currPoly.Points, currPoly.Points[0])
 	inPoly = false
-	unlockButtons()
+	unlockButtons(buttons)
 	linkButton.Disable()
 }
 
@@ -164,14 +242,14 @@ func CanvasOnTappedSecondary(x, y float64) {
 	addSepDot(point)
 }
 
-func lockButtons() {
-	for _, v := range buttons {
+func lockButtons(bt []*widget.Button) {
+	for _, v := range bt {
 		v.Disable()
 	}
 }
 
-func unlockButtons() {
-	for _, v := range buttons {
+func unlockButtons(bt []*widget.Button) {
+	for _, v := range bt {
 		v.Enable()
 	}
 }
@@ -257,14 +335,14 @@ func SetupApp() {
 
 	sepRect0 := createVertSepRect(methodC.MinSize().Height)
 
-	areaColorLabel := canvas.NewText("Выберите цвет отсекателя", theme.ForegroundColor())
-	areaColorSelect := widget.NewSelect(COLORS, func(value string) {
+	sepColorLabel := canvas.NewText("Выберите цвет отсекателя", theme.ForegroundColor())
+	sepColorSelect := widget.NewSelect(COLORS, func(value string) {
 		sepColorV = getColor(value)
 		log.Println("Select set to", value)
 	})
-	areaColorSelect.SetSelected(COLORS[2])
+	sepColorSelect.SetSelected(COLORS[2])
 	sepColorV = getColor(COLORS[2])
-	areaColorC := container.NewHBox(areaColorLabel, areaColorSelect)
+	sepColorC := container.NewHBox(sepColorLabel, sepColorSelect)
 
 	linePrimeColorLabel := canvas.NewText("Выберите цвет полигона", theme.ForegroundColor())
 	linePrimeColorSelect := widget.NewSelect(COLORS, func(value string) {
@@ -284,7 +362,7 @@ func SetupApp() {
 	polySepColorV = getColor(COLORS[3])
 	lineSepColorC := container.NewHBox(lineSepColorLabel, lineSepColorSelect)
 
-	colorC := container.NewVBox(areaColorC, linePrimeColorC, lineSepColorC)
+	colorC := container.NewVBox(sepColorC, linePrimeColorC, lineSepColorC)
 
 	sepRect1 := createVertSepRect(methodC.MinSize().Height)
 
@@ -318,7 +396,17 @@ func SetupApp() {
 
 	canvasButtonsC := container.NewVBox(sepButton, clearCanvasButton, linkButton)
 
-	upperFrame := container.NewHBox(methodC, sepRect0, colorC, sepRect1, canvasButtonsC)
+	sepRect2 := createVertSepRect(methodC.MinSize().Height)
+
+	drawModeLabel := canvas.NewText("	Выберите режим		", theme.ForegroundColor())
+	drawModeSelect := widget.NewSelect(MODES, func(value string) {
+		currMode = value
+	})
+	drawModeSelect.SetSelected(MODES[0])
+
+	drawModeC := container.NewVBox(drawModeLabel, drawModeSelect)
+
+	upperFrame := container.NewHBox(methodC, sepRect0, colorC, sepRect1, canvasButtonsC, sepRect2, drawModeC)
 
 	raster = canvas.NewRasterWithPixels(drawCanvas)
 	raster.SetMinSize(fyne.NewSize(upperFrame.MinSize().Width, myWindow.Canvas().Scale()*500))
