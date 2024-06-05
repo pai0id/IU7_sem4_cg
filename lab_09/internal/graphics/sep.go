@@ -51,7 +51,7 @@ func vector(v1, v2 Line) float64 {
 
 func isVisiable(point, peak1, peak2 FPoint, norm int) bool {
 	v := vector(Line{point, peak1}, Line{peak2, peak1})
-	return float64(norm)*v < 0
+	return float64(norm)*v <= 0
 }
 
 func isIntersection(ed1, ed2 Line, norm int) *FPoint {

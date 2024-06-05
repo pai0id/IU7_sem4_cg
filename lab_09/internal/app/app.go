@@ -72,11 +72,6 @@ type tappableCanvasObject struct {
 func addSepDot(p graphics.FPoint) {
 	if inSep {
 		prev := currSep.Points[len(currSep.Points)-1]
-		if prev == p {
-			dialog.ShowError(errors.New("ТА ЖЕ ТОЧКА"), myWindow)
-			log.Println("Error: Та же точка")
-			return
-		}
 		if currMode == MODES[1] {
 			deltX := math.Abs(prev.X - p.X)
 			deltY := math.Abs(prev.Y - p.Y)
@@ -86,10 +81,15 @@ func addSepDot(p graphics.FPoint) {
 				p = graphics.FPoint{X: prev.X, Y: p.Y}
 			}
 		}
+		if prev == p {
+			dialog.ShowError(errors.New("ТА ЖЕ ТОЧКА"), myWindow)
+			log.Println("Error: Та же точка")
+			return
+		}
 		currSep.Points = append(currSep.Points, p)
 		graphics.DrawLine(&pixels, graphics.Line{P1: p, P2: prev}, sepColorV)
 		raster.Refresh()
-	} else {
+	} else if !inPoly {
 		clearSep()
 		currSep.Points = append(currSep.Points, p)
 
@@ -153,11 +153,6 @@ func findParallel(prev, curr graphics.FPoint) graphics.FPoint {
 func addPolyDot(p graphics.FPoint) {
 	if inPoly {
 		prev := currPoly.Points[len(currPoly.Points)-1]
-		if prev == p {
-			dialog.ShowError(errors.New("ТА ЖЕ ТОЧКА"), myWindow)
-			log.Println("Error: Та же точка")
-			return
-		}
 		if currMode == MODES[1] {
 			deltX := math.Abs(prev.X - p.X)
 			deltY := math.Abs(prev.Y - p.Y)
@@ -180,11 +175,28 @@ func addPolyDot(p graphics.FPoint) {
 			}
 			p = currP
 		}
+		if prev == p {
+			dialog.ShowError(errors.New("ТА ЖЕ ТОЧКА"), myWindow)
+			log.Println("Error: Та же точка")
+			return
+		}
 		currPoly.Points = append(currPoly.Points, p)
 		graphics.DrawLine(&pixels, graphics.Line{P1: p, P2: prev}, polyPrimeColorV)
 		raster.Refresh()
-	} else {
+	} else if !inSep {
 		clearPoly()
+		if currMode == MODES[3] && len(currSep.Points) != 0 {
+			minDelt := math.Abs(currSep.Points[0].X-p.X) + math.Abs(currSep.Points[0].Y-p.Y)
+			currP := currSep.Points[0]
+			for _, v := range currSep.Points {
+				delt := math.Abs(v.X-p.X) + math.Abs(v.Y-p.Y)
+				if delt < minDelt {
+					minDelt = delt
+					currP = v
+				}
+			}
+			p = currP
+		}
 		currPoly.Points = append(currPoly.Points, p)
 
 		inPoly = true
