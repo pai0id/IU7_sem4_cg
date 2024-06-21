@@ -39,3 +39,7 @@ func itofPoint(p IPoint) FPoint {
 func ftoiPoint(p FPoint) IPoint {
 	return IPoint{round(p.X), round(p.Y)}
 }
+
+func FPointFromSlice(slice []float64) FPoint {
+	return FPoint{X: slice[0], Y: slice[1]}
+}

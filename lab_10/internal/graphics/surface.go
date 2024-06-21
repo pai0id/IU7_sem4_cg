@@ -120,12 +120,13 @@ func SetMeta(xF, xT, xS, zF, zT, zS float64) {
 	Solve()
 }
 
-func isVisible(point []float64) bool {
-	return point[0] >= 0 && point[0] < float64(screenWidth) && point[1] >= 0 && point[1] < float64(screenHeight)
+func isVisible(point FPoint) bool {
+	return point.X >= 0 && point.X < float64(screenWidth) && point.Y >= 0 && point.Y < float64(screenHeight)
 }
 
 func drawPoint(x, y int, hh, lh []int) bool {
-	if !isVisible([]float64{float64(x), float64(y)}) {
+	p := FPoint{X: float64(x), Y: float64(y)}
+	if !isVisible(p) {
 		return false
 	}
 	if y > hh[x] {
@@ -138,16 +139,16 @@ func drawPoint(x, y int, hh, lh []int) bool {
 	return true
 }
 
-func drawHorizonPart(p1, p2 []float64, hh, lh []int) {
-	if p1[0] > p2[0] {
+func drawHorizonPart(p1, p2 FPoint, hh, lh []int) {
+	if p1.X > p2.X {
 		p1, p2 = p2, p1
 	}
-	dx := p2[0] - p1[0]
-	dy := p2[1] - p1[1]
+	dx := p2.X - p1.X
+	dy := p2.Y - p1.Y
 	l := math.Max(math.Abs(dx), math.Abs(dy))
 	dx /= l
 	dy /= l
-	x, y := p1[0], p1[1]
+	x, y := p1.X, p1.Y
 	for i := 0; i <= int(l); i++ {
 		if !drawPoint(int(math.Round(x)), int(math.Round(y)), hh, lh) {
 			return
@@ -158,13 +159,13 @@ func drawHorizonPart(p1, p2 []float64, hh, lh []int) {
 }
 
 func drawHorizon(f func(float64, float64) float64, hh, lh []int, fr, to, step, z float64) {
-	var prev []float64
+	var prev *FPoint
 	for x := fr; x <= to; x += step {
-		current := transPoint([]float64{x, f(x, z), z})
+		current := FPointFromSlice(transPoint([]float64{x, f(x, z), z}))
 		if prev != nil {
-			drawHorizonPart(prev, current, hh, lh)
+			drawHorizonPart(*prev, current, hh, lh)
 		}
-		prev = current
+		prev = &current
 	}
 }
 
@@ -179,13 +180,13 @@ func Solve() {
 		drawHorizon(f, highHorizon, lowHorizon, xFrom, xTo, xStep, z)
 	}
 	for z := zFrom; z < zTo; z += zStep {
-		p1 := transPoint([]float64{xFrom, f(xFrom, z), z})
-		p2 := transPoint([]float64{xFrom, f(xFrom, z+zStep), z + zStep})
-		l := Line{FPoint{X: p1[0], Y: p1[1]}, FPoint{X: p2[0], Y: p2[1]}}
+		p1 := FPointFromSlice(transPoint([]float64{xFrom, f(xFrom, z), z}))
+		p2 := FPointFromSlice(transPoint([]float64{xFrom, f(xFrom, z+zStep), z + zStep}))
+		l := Line{P1: p1, P2: p2}
 		go DrawLine(l)
-		p1 = transPoint([]float64{xTo, f(xTo, z), z})
-		p2 = transPoint([]float64{xTo, f(xTo, z+zStep), z + zStep})
-		l = Line{FPoint{X: p1[0], Y: p1[1]}, FPoint{X: p2[0], Y: p2[1]}}
+		p1 = FPointFromSlice(transPoint([]float64{xTo, f(xTo, z), z}))
+		p2 = FPointFromSlice(transPoint([]float64{xTo, f(xTo, z+zStep), z + zStep}))
+		l = Line{P1: p1, P2: p2}
 		go DrawLine(l)
 	}
 }
