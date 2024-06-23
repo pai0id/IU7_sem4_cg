@@ -68,7 +68,7 @@ func SetupApp() {
 		graphics.CurrFunc = graphics.GetID(value)
 		log.Println("Select set to", value)
 		clearCanvas()
-		go graphics.Solve()
+		graphics.Solve()
 		go raster.Refresh()
 	})
 	funcSelect.SetSelected(graphics.FuncStrArr[0])
@@ -256,7 +256,7 @@ func SetupApp() {
 
 	drawButton := widget.NewButton("Нарисовать", func() {
 		clearCanvas()
-		go graphics.Solve()
+		graphics.Solve()
 		go raster.Refresh()
 	})
 
@@ -278,16 +278,14 @@ func SetupApp() {
 	content := container.NewVBox(upperFrame, sepRectULWFrames, lowerFrame)
 
 	go func() {
-		for {
-			time.Sleep(time.Second)
-			w := int(raster.Size().Width * myWindow.Canvas().Scale())
-			h := int(raster.Size().Height * myWindow.Canvas().Scale())
-			rasterSizeLabel.Text = fmt.Sprintf("%dx%d", w, h)
-			if graphics.UpdateScreen(w, h) {
-				clearCanvas()
-				go graphics.Solve()
-				go raster.Refresh()
-			}
+		time.Sleep(time.Second)
+		w := int(raster.Size().Width * myWindow.Canvas().Scale())
+		h := int(raster.Size().Height * myWindow.Canvas().Scale())
+		rasterSizeLabel.Text = fmt.Sprintf("%dx%d", w, h)
+		if graphics.UpdateScreen(w, h) {
+			clearCanvas()
+			graphics.Solve()
+			go raster.Refresh()
 		}
 	}()
 	myWindow.SetContent(content)
